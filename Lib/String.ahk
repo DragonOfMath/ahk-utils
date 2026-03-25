@@ -4,10 +4,11 @@
 /**
  * @name        String.ahk
  * @description String utilities.
- * @version     1.1-2026.03.19
+ * @version     1.2-2026.03.24
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
+ * v1.2 - String.prototype.Replace now calls StrReplace
  * v1.1 - cleanup and docs
  * v1.0 - initial release
  */
@@ -29,7 +30,7 @@ CharAt(self, idx) {
  * @returns {Boolean}
  */
 StrStartsWith(x, y) {
-	return (SubStr(x, 1, y.length) = y)
+	return (SubStr(x, 1, StrLen(y)) = y)
 }
 
 /**
@@ -39,7 +40,7 @@ StrStartsWith(x, y) {
  * @returns {Boolean}
  */
 StrEndsWith(x, y) {
-	return (SubStr(x, -y.length) = y)
+	return (SubStr(x, -StrLen(y)) = y)
 }
 
 /**
@@ -49,7 +50,7 @@ StrEndsWith(x, y) {
  * @returns {Boolean}
  */
 StrIsWrapped(x, w := '""') {
-	return StrStartsWith(x, w.CharAt(1)) and StrEndsWith(x, w.CharAt(2))
+	return StrStartsWith(x, CharAt(w, 1)) and StrEndsWith(x, CharAt(w, 2))
 }
 
 /**
@@ -59,7 +60,7 @@ StrIsWrapped(x, w := '""') {
  * @returns {String}
  */
 StrWrap(x, w := '""') {
-	return w.CharAt(1) . x . w.CharAt(2)
+	return CharAt(w, 1) . x . CharAt(w, 2)
 }
 
 /**
@@ -213,3 +214,4 @@ StrBase := "".Base
 DefProp := {}.DefineProp
 DefProp(StrBase, "Length", {get: StrLen})
 DefProp(StrBase, "CharAt", {call: CharAt})
+DefProp(StrBase, "Replace", {call: StrReplace})

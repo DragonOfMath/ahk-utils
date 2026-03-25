@@ -64,6 +64,7 @@ class Duration {
 	
 	/**
 	 * Called when used for variadic parameters.
+	 * https://www.autohotkey.com/docs/v2/Functions.htm#VariadicCall
 	 * @returns {Array}
 	 */
 	__Enum(*) {
