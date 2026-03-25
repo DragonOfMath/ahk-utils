@@ -4,10 +4,11 @@
 /**
  * @name        Time.ahk
  * @description Utility for granular time and date manipulation.
- * @version     1.2-2026.03.19
+ * @version     1.21-2026.03.19
  * @requires    Autohotkey >= 2.0
  * @license     GNU GPLv3
  * Changelog:
+ * v1.3 - 
  * v1.2 - made DayName and MonthName settable
  * v1.1 - allow DateMin, DateMax, and DateCompare to work with unset parameters
  * v1.0 - initial release
@@ -248,22 +249,22 @@ class Time {
 	 * Compares this instance with another instance to determine which comes sooner.
 	 * @returns {Number} -1 if this comes before the other, 1 if it comes after, 0 if they are the same
 	 */
-	Compare(time) {
-		if (not (time is Time)) {
-			time := Time(time)
+	Compare(t) {
+		if (not (t is Time)) {
+			t := Time(t)
 		}
 		__Compare(a, b) {
 			return a < b ? -1 : 
 				   a > b ?  1 : 0
 		}
-		return __Compare(this.ahk_time, time.ahk_time)
+		return __Compare(this.ahk_time, t.ahk_time)
 		/*
-		return __Compare(this.Year,   time.Year) or 
-			   __Compare(this.Month,  time.Month) or 
-			   __Compare(this.Day,    time.Day) or 
-			   __Compare(this.Hour,   time.Hour) or 
-			   __Compare(this.Minute, time.Minute) or 
-			   __Compare(this.Second, time.Second)
+		return __Compare(this.Year,   t.Year) or 
+			   __Compare(this.Month,  t.Month) or 
+			   __Compare(this.Day,    t.Day) or 
+			   __Compare(this.Hour,   t.Hour) or 
+			   __Compare(this.Minute, t.Minute) or 
+			   __Compare(this.Second, t.Second)
 		*/
 	}
 	
@@ -344,7 +345,7 @@ class Time {
 	 */
 	static GetDate(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return SubStr(ahk_time, 1, 8) ;FormatTime(ahk_time, "yyyyMMdd")
 	}
 	
@@ -356,7 +357,7 @@ class Time {
 	 */
 	static SetDate(ahk_time := A_Now, date := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return SubStr(date, 1, 8) . SubStr(ahk_time, 9)
 	}
 	
@@ -368,7 +369,7 @@ class Time {
 	 */
 	static GetTime(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return SubStr(ahk_time, 9) or "000000" ;FormatTime(ahk_time, "HHmmss")
 	}
 	
@@ -380,7 +381,7 @@ class Time {
 	 */
 	static SetTime(ahk_time := A_Now, time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return SubStr(ahk_time, 1, 8) . SubStr(time, -6)
 	}
 	
@@ -391,7 +392,7 @@ class Time {
 	 */
 	static GetYear(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return Number(FormatTime(ahk_time, "yyyy"))
 	}
 	
@@ -403,7 +404,7 @@ class Time {
 	 */
 	static SetYear(ahk_time := A_Now, year := A_Year) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		if (year < 1601 or year > 9999)
 			throw ValueError("Year out of range (1601-9999)",, year)
 		return Format("{:04}", year) . SubStr(ahk_time, 5)
@@ -417,7 +418,7 @@ class Time {
 	 */
 	static ModYear(ahk_time := A_Now, years := 1) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return this.SetYear(ahk_time, this.GetYear(ahk_time) + years)
 	}
 	
@@ -428,7 +429,7 @@ class Time {
 	 */
 	static GetMonth(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return Number(FormatTime(ahk_time, "M"))
 	}
 	
@@ -440,7 +441,7 @@ class Time {
 	 */
 	static SetMonth(ahk_time := A_Now, month := A_MM) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		if (month is String) {
 			if (MonthsOfTheYear.HasOwnProp(month)) {
 				month := MonthsOfTheYear.%month%
@@ -461,7 +462,7 @@ class Time {
 	 */
 	static ModMonth(ahk_time := A_Now, months := 1) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return this.SetMonth(ahk_time, this.GetMonth(ahk_time) + months)
 	}
 	
@@ -472,7 +473,7 @@ class Time {
 	 */
 	static GetDay(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return Number(FormatTime(ahk_time, "d"))
 	}
 	
@@ -486,7 +487,7 @@ class Time {
 	 */
 	static SetDay(ahk_time := A_Now, day := A_DD) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return DateAdd(ahk_time, day - this.GetDay(ahk_time), "Days")
 	}
 	
@@ -498,7 +499,7 @@ class Time {
 	 */
 	static ModDay(ahk_time := A_Now, days := 1) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return this.SetDay(ahk_time, this.GetDay(ahk_time) + days)
 	}
 	
@@ -509,7 +510,7 @@ class Time {
 	 */
 	static GetHour(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return Number(FormatTime(ahk_time, "H"))
 	}
 	
@@ -523,7 +524,7 @@ class Time {
 	 */
 	static SetHour(ahk_time := A_Now, hour := A_Hour) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return DateAdd(ahk_time, hour - this.GetHour(ahk_time), "Hours")
 	}
 	
@@ -535,7 +536,7 @@ class Time {
 	 */
 	static ModHour(ahk_time := A_Now, hours := 1) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return this.SetHour(ahk_time, this.GetHour(ahk_time) + hours)
 	}
 	
@@ -546,7 +547,7 @@ class Time {
 	 */
 	static GetMinute(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return Number(FormatTime(ahk_time, "m"))
 	}
 	
@@ -560,7 +561,7 @@ class Time {
 	 */
 	static SetMinute(ahk_time := A_Now, minute := A_Min) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return DateAdd(ahk_time, minute - this.GetMinute(ahk_time), "Minutes")
 	}
 	
@@ -572,7 +573,7 @@ class Time {
 	 */
 	static ModMinute(ahk_time := A_Now, mins := 1) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return this.SetMinute(ahk_time, this.GetMinute(ahk_time) + mins)
 	}
 	
@@ -583,7 +584,7 @@ class Time {
 	 */
 	static GetSecond(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return Number(FormatTime(ahk_time, "s"))
 	}
 	
@@ -597,7 +598,7 @@ class Time {
 	 */
 	static SetSecond(ahk_time := A_Now, second := A_Sec) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return DateAdd(ahk_time, second - this.GetSecond(ahk_time), "Seconds")
 	}
 	
@@ -609,7 +610,7 @@ class Time {
 	 */
 	static ModSecond(ahk_time := A_Now, secs := 1) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return this.SetSecond(ahk_time, this.GetSecond(ahk_time) + secs)
 	}
 	
@@ -620,7 +621,7 @@ class Time {
 	 */
 	static GetMonthName(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return FormatTime(ahk_time, "MMMM")
 	}
 	
@@ -631,7 +632,7 @@ class Time {
 	 */
 	static GetDayName(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return FormatTime(ahk_time, "dddd")
 	}
 	
@@ -642,7 +643,7 @@ class Time {
 	 */
 	static GetDayOfWeek(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return Number(FormatTime(ahk_time, "WDay"))
 	}
 	
@@ -654,7 +655,7 @@ class Time {
 	 */
 	static SetDayOfWeek(ahk_time := A_Now, dow := A_DDDD) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		if (dow is String) {
 			if (DaysOfTheWeek.HasOwnProp(dow)) {
 				dow := DaysOfTheWeek.%dow%
@@ -674,7 +675,7 @@ class Time {
 	 */
 	static GetDayOfYear(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return Number(FormatTime(ahk_time, "YDay"))
 	}
 	
@@ -686,7 +687,7 @@ class Time {
 	 */
 	static SetDayOfYear(ahk_time := A_Now, doy := A_YDay) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		limit := this.IsLeapYear(ahk_time) ? 366 : 365
 		if (doy < 1 or doy > limit)
 			throw ValueError("Day of the year out of range (1-" . limit . ")",, doy)
@@ -700,7 +701,7 @@ class Time {
 	 */
 	static GetWeekOfYear(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return FormatTime(ahk_time, "YWeek")
 	}
 	
@@ -711,7 +712,7 @@ class Time {
 	 */
 	static IsLeapYear(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return (Mod(this.GetYear(ahk_time), 4) = 0)
 	}
 	
@@ -723,7 +724,7 @@ class Time {
 	 */
 	static ToFormattedDate(ahk_time := A_Now, fmt := "yyyy-MM-dd") {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return FormatTime(ahk_time, fmt)
 	}
 	
@@ -735,7 +736,7 @@ class Time {
 	 */
 	static ToFormattedTime(ahk_time := A_Now, fmt := "HH:mm:ss") {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return FormatTime(ahk_time, fmt)
 	}
 	
@@ -747,7 +748,7 @@ class Time {
 	 */
 	static ToFormattedDateTime(ahk_time := A_Now, fmt := "yyyy-MM-dd HH:mm:ss") {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return FormatTime(ahk_time, fmt)
 	}
 	
@@ -758,7 +759,7 @@ class Time {
 	 */
 	static ToUTC(ahk_time := A_Now) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return DateAdd(ahk_time, -TIMEZONE_OFFSET, "Hours")
 	}
 	
@@ -769,7 +770,7 @@ class Time {
 	 */
 	static ToLocal(ahk_time := A_NowUTC) {
 		if (not (ahk_time is String))
-			ahk_time := ahk_time.ahk_time
+			ahk_time := ahk_time.ToString()
 		return DateAdd(ahk_time, TIMEZONE_OFFSET, "Hours")
 	}
 }

@@ -81,6 +81,7 @@ class JSON {
 	 * Keeps track of object elements referenced when serializing, so that cyclic references don't create infinite recursion.
 	 * Redundant references are allowed.
 	 * @type {Object[]}
+	 * @static
 	 */
 	static REFS := []
 	
@@ -88,18 +89,21 @@ class JSON {
 	 * Used to ignore properties that should not be used/serialized when parsing or stringifying.
 	 * This is the only way to know since AHK does not have accessor qualifiers.
 	 * @type {String}
+	 * @static
 	 */
 	static PRIVATE_PROP_PREFIX := "__"
 	
 	/**
 	 * Special property name that is used to store a list of properties to avoid serializing that aren't prefixed with `PRIVATE_PROP_PREFIX`.
 	 * @type {String}
+	 * @static
 	 */
 	static PRIVATE_PROP_FILTER_KEY := "__PRIVATE__"
 	
 	/**
 	 * When a cyclic reference occurs, return an empty string rather than raising an error.
 	 * @type {Boolean}
+	 * @static
 	 */
 	static IGNORE_CYCLIC_REFS := true
 	
@@ -433,7 +437,7 @@ class JSON {
 	
 	/**
 	 * Serializes an AHK Array to a JSON string.
-	 * @param {&String} obj - the AHK object to stringify
+	 * @param {&Array} obj - the AHK object to stringify
 	 * @param {Boolean} [prettify=false] - if true, the JSON string will split the elements into lines and indent them according to the depth in the object; if false, the JSON string will be packed without any whitespace
 	 * @param {Integer} [__depth=1] - internally used parameter for counting nesting depth and applying indentation
 	 * @returns {String} the JSON string
@@ -602,7 +606,7 @@ class JSON {
 	/**
 	 * Writes an arbitrary object to a file as JSON.
 	 * @param {String} filename - path to the file to write to; ".json" at the end will be added if it is missing
-	 * @param {&Object} contents - the object data
+	 * @param {Object} contents - the object data
 	 * @param {Boolean} [prettify=false] - if true, the JSON string will split the elements into lines and indent them according to the depth in the object; if false, the JSON string will be packed without any whitespace
 	 * @returns {String} the JSON string written to the file
 	 * @static
@@ -625,6 +629,7 @@ class JSON {
 	 * @param {String} [expected] - the character or set of characters that was expected at the index
 	 * @returns {Error}
 	 * @static
+	 * @private
 	 */
 	static SyntaxError(str, index, found, expected) {
 		switch expected {
@@ -666,6 +671,7 @@ class JSON {
 	 * @param {String} [expected] - the character or set of characters that was expected at the index, or the value(s) expected
 	 * @returns {Error}
 	 * @static
+	 * @private
 	 */
 	static ValueError(index := 0, found := "", expected := "any") {
 		if (index) {

@@ -616,18 +616,23 @@ ArrayUnique(this) {
 
 /**
  * Unionizes multiple arrays into one array containing unique elements from all arrays.
+ * @param {Array} this
  * @param {Array[]} arrs*
  * @returns {Array}
  */
-ArrayUnion(arrs*) {
-	AssertArrays(arrs*)
+ArrayUnion(this, arrs*) {
+	AssertArrays(this, arrs*)
 	union := []
-	loop arrs.Length {
-		for x in arrs[A_Index] {
+	__Union(arr) {
+		for x in arr {
 			if (not ArrayContains(union, x)) {
 				union.Push(x)
 			}
 		}
+	}
+	__Union(this)
+	loop arrs.Length {
+		__Union(arrs[A_Index])
 	}
 	return union
 }
