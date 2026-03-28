@@ -6,9 +6,14 @@
 /**
  * @name        Scheduler.ahk
  * @description Utility library that complements Time.ahk by calculating schedules, intervals, countdowns, and more.
- * @version     1.2-2025.04.17
+ * @version     1.3-2026.03.28
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
+ * Changelog:
+ * v1.3 - Scheduler.Now shortcut; methods no longer use empty string for default value, avoiding an edge case where midnight "000000" is considered falsy and wasn't properly handled
+ * v1.2 - Various month/weekday methods
+ * v1.1 - Scheduler.Random
+ * v1.0 - initial build
  */
 
 /**
@@ -38,17 +43,20 @@ class Scheduler {
 	static EVENING  := "180000"
 	
 	/**
+	 * Shortcut for getting either A_Now or A_NowUTC, depending on `USE_UTC`.
+	 * @type {String}
+	 * @readonly
+	 */
+	static Now => this.USE_UTC ? A_NowUTC : A_Now
+	
+	/**
 	 * Returns the future timestamp from now of time elapsed.
-	 * @param {Number} times
+	 * @param {Number} timer
 	 * @param {String} [unit]
 	 * @returns {String}
 	 */
-	static SetTimeRemaining(times, unit := this.DEFAULT_UNIT) {
-		if (this.USE_UTC) {
-			return DateAdd(A_NowUTC, times, unit)
-		} else {
-			return DateAdd(A_Now, times, unit)
-		}
+	static SetTimeRemaining(timer, unit := this.DEFAULT_UNIT) {
+		return DateAdd(this.Now, timer, unit)
 	}
 	
 	/**
@@ -57,12 +65,8 @@ class Scheduler {
 	 * @param {String} [unit]
 	 * @returns {Number}
 	 */
-	static GetTimeRemaining(ahk_time := "", unit := this.DEFAULT_UNIT) {
-		if (this.USE_UTC) {
-			return DateDiff(ahk_time or A_NowUTC, A_NowUTC, unit)
-		} else {
-			return DateDiff(ahk_time or A_Now, A_Now, unit)
-		}
+	static GetTimeRemaining(ahk_time := this.Now, unit := this.DEFAULT_UNIT) {
+		return DateDiff(ahk_time, this.Now, unit)
 	}
 	
 	/**
@@ -71,12 +75,8 @@ class Scheduler {
 	 * @param {String} [unit]
 	 * @returns {String}
 	 */
-	static SetTimeElapsed(times, unit := this.DEFAULT_UNIT) {
-		if (this.USE_UTC) {
-			return DateAdd(A_NowUTC, -times, unit)
-		} else {
-			return DateAdd(A_Now, -times, unit)
-		}
+	static SetTimeElapsed(timer, unit := this.DEFAULT_UNIT) {
+		return DateAdd(this.Now, -timer, unit)
 	}
 	
 	/**
@@ -85,12 +85,8 @@ class Scheduler {
 	 * @param {String} [unit]
 	 * @returns {Number}
 	 */
-	static GetTimeElapsed(ahk_time := "", unit := this.DEFAULT_UNIT) {
-		if (this.USE_UTC) {
-			return DateDiff(A_NowUTC, ahk_time or A_NowUTC, unit)
-		} else {
-			return DateDiff(A_Now, ahk_time or A_Now, unit)
-		}
+	static GetTimeElapsed(ahk_time := this.Now, unit := this.DEFAULT_UNIT) {
+		return DateDiff(this.Now, ahk_time, unit)
 	}
 	
 	/**
@@ -166,9 +162,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time, which is pointless
 	 * @returns {String}
 	 */
-	static Today(at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static Today(at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		return t.ahk_time
 	}
 	
@@ -177,9 +174,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static Tomorrow(at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static Tomorrow(at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.day++
 		return t.ahk_time
 	}
@@ -189,9 +187,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static Yesterday(at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static Yesterday(at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.day--
 		return t.ahk_time
 	}
@@ -202,9 +201,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static ThisWeek(weekday := A_WDay, at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static ThisWeek(weekday := A_WDay, at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.day := weekday
 		return t.ahk_time
 	}
@@ -215,9 +215,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static NextWeek(weekday := A_WDay, at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static NextWeek(weekday := A_WDay, at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.day += 7 - (t.DayOfWeek - weekday)
 		return t.ahk_time
 	}
@@ -228,9 +229,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static PrevWeek(weekday := A_WDay, at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static PrevWeek(weekday := A_WDay, at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.day -= 7 - (t.DayOfWeek - weekday)
 		return t.ahk_time
 	}
@@ -241,9 +243,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static ThisMonth(monthday := A_MDay, at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static ThisMonth(monthday := A_MDay, at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.day := monthday
 		return t.ahk_time
 	}
@@ -254,9 +257,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static NextMonth(monthday := A_MDay, at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static NextMonth(monthday := A_MDay, at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.month++
 		t.day := monthday
 		return t.ahk_time
@@ -268,9 +272,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static PrevMonth(monthday := A_MDay, at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static PrevMonth(monthday := A_MDay, at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.month--
 		t.day := monthday
 		return t.ahk_time
@@ -283,9 +288,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static ThisYear(month := A_Mon, monthday := A_MDay, at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static ThisYear(month := A_Mon, monthday := A_MDay, at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.month := month
 		t.day := monthday
 		return t.ahk_time
@@ -298,9 +304,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static NextYear(month := A_Mon, monthday := A_MDay, at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static NextYear(month := A_Mon, monthday := A_MDay, at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.month := month
 		t.day := monthday
 		t.year++
@@ -314,9 +321,10 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static PrevYear(month := A_Mon, monthday := A_MDay, at_time := "") {
-		t := Time(this.USE_UTC ? A_NowUTC : A_Now)
-		t.time := at_time or t.time
+	static PrevYear(month := A_Mon, monthday := A_MDay, at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
 		t.month := month
 		t.day := monthday
 		t.year--
@@ -328,11 +336,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static Sunday(at_time := "") {
-		if (Time.GetDay(this.USE_UTC ? A_NowUTC : A_Now) <= 1) {
-			return this.ThisWeek(1, at_time)
+	static Sunday(at_time?) {
+		if (Time.GetDay(this.Now) <= 1) {
+			return this.ThisWeek(1, at_time?)
 		} else {
-			return this.NextWeek(1, at_time)
+			return this.NextWeek(1, at_time?)
 		}
 	}
 	
@@ -341,11 +349,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static Monday(at_time := "") {
-		if (Time.GetDay(this.USE_UTC ? A_NowUTC : A_Now) <= 2) {
-			return this.ThisWeek(2, at_time)
+	static Monday(at_time?) {
+		if (Time.GetDay(this.Now) <= 2) {
+			return this.ThisWeek(2, at_time?)
 		} else {
-			return this.NextWeek(2, at_time)
+			return this.NextWeek(2, at_time?)
 		}
 	}
 	
@@ -354,11 +362,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static Tuesday(at_time := "") {
-		if (Time.GetDay(this.USE_UTC ? A_NowUTC : A_Now) <= 3) {
-			return this.ThisWeek(3, at_time)
+	static Tuesday(at_time?) {
+		if (Time.GetDay(this.Now) <= 3) {
+			return this.ThisWeek(3, at_time?)
 		} else {
-			return this.NextWeek(3, at_time)
+			return this.NextWeek(3, at_time?)
 		}
 	}
 	
@@ -367,11 +375,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static Wednesday(at_time := "") {
-		if (Time.GetDay(this.USE_UTC ? A_NowUTC : A_Now) <= 4) {
-			return this.ThisWeek(4, at_time)
+	static Wednesday(at_time?) {
+		if (Time.GetDay(this.Now) <= 4) {
+			return this.ThisWeek(4, at_time?)
 		} else {
-			return this.NextWeek(4, at_time)
+			return this.NextWeek(4, at_time?)
 		}
 	}
 	
@@ -380,11 +388,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static Thursday(at_time := "") {
-		if (Time.GetDay(this.USE_UTC ? A_NowUTC : A_Now) <= 5) {
-			return this.ThisWeek(5, at_time)
+	static Thursday(at_time?) {
+		if (Time.GetDay(this.Now) <= 5) {
+			return this.ThisWeek(5, at_time?)
 		} else {
-			return this.NextWeek(5, at_time)
+			return this.NextWeek(5, at_time?)
 		}
 	}
 	
@@ -393,11 +401,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static Friday(at_time := "") {
-		if (Time.GetDay(this.USE_UTC ? A_NowUTC : A_Now) <= 6) {
-			return this.ThisWeek(6, at_time)
+	static Friday(at_time?) {
+		if (Time.GetDay(this.Now) <= 6) {
+			return this.ThisWeek(6, at_time?)
 		} else {
-			return this.NextWeek(6, at_time)
+			return this.NextWeek(6, at_time?)
 		}
 	}
 	
@@ -406,11 +414,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static Saturday(at_time := "") {
-		if (Time.GetDay(this.USE_UTC ? A_NowUTC : A_Now) <= 7) {
-			return this.ThisWeek(7, at_time)
+	static Saturday(at_time?) {
+		if (Time.GetDay(this.Now) <= 7) {
+			return this.ThisWeek(7, at_time?)
 		} else {
-			return this.NextWeek(7, at_time)
+			return this.NextWeek(7, at_time?)
 		}
 	}
 	
@@ -420,11 +428,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static January(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 1) {
-			return this.ThisYear(1, day, at_time)
+	static January(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 1) {
+			return this.ThisYear(1, day, at_time?)
 		} else {
-			return this.NextYear(1, day, at_time)
+			return this.NextYear(1, day, at_time?)
 		}
 	}
 	
@@ -434,11 +442,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static February(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 2) {
-			return this.ThisYear(2, day, at_time)
+	static February(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 2) {
+			return this.ThisYear(2, day, at_time?)
 		} else {
-			return this.NextYear(2, day, at_time)
+			return this.NextYear(2, day, at_time?)
 		}
 	}
 	
@@ -448,11 +456,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static March(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 3) {
-			return this.ThisYear(3, day, at_time)
+	static March(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 3) {
+			return this.ThisYear(3, day, at_time?)
 		} else {
-			return this.NextYear(3, day, at_time)
+			return this.NextYear(3, day, at_time?)
 		}
 	}
 	
@@ -462,11 +470,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static April(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 4) {
-			return this.ThisYear(4, day, at_time)
+	static April(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 4) {
+			return this.ThisYear(4, day, at_time?)
 		} else {
-			return this.NextYear(4, day, at_time)
+			return this.NextYear(4, day, at_time?)
 		}
 	}
 	
@@ -476,11 +484,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static May(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 5) {
-			return this.ThisYear(5, day, at_time)
+	static May(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 5) {
+			return this.ThisYear(5, day, at_time?)
 		} else {
-			return this.NextYear(5, day, at_time)
+			return this.NextYear(5, day, at_time?)
 		}
 	}
 	
@@ -490,11 +498,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static June(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 6) {
-			return this.ThisYear(6, day, at_time)
+	static June(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 6) {
+			return this.ThisYear(6, day, at_time?)
 		} else {
-			return this.NextYear(6, day, at_time)
+			return this.NextYear(6, day, at_time?)
 		}
 	}
 	
@@ -504,11 +512,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static July(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 7) {
-			return this.ThisYear(7, day, at_time)
+	static July(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 7) {
+			return this.ThisYear(7, day, at_time?)
 		} else {
-			return this.NextYear(7, day, at_time)
+			return this.NextYear(7, day, at_time?)
 		}
 	}
 	
@@ -518,11 +526,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static August(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 8) {
-			return this.ThisYear(8, day, at_time)
+	static August(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 8) {
+			return this.ThisYear(8, day, at_time?)
 		} else {
-			return this.NextYear(8, day, at_time)
+			return this.NextYear(8, day, at_time?)
 		}
 	}
 	
@@ -532,11 +540,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static September(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 9) {
-			return this.ThisYear(9, day, at_time)
+	static September(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 9) {
+			return this.ThisYear(9, day, at_time?)
 		} else {
-			return this.NextYear(9, day, at_time)
+			return this.NextYear(9, day, at_time?)
 		}
 	}
 	
@@ -546,11 +554,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static October(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 10) {
-			return this.ThisYear(10, day, at_time)
+	static October(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 10) {
+			return this.ThisYear(10, day, at_time?)
 		} else {
-			return this.NextYear(10, day, at_time)
+			return this.NextYear(10, day, at_time?)
 		}
 	}
 	
@@ -560,11 +568,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static November(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 11) {
-			return this.ThisYear(11, day, at_time)
+	static November(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 11) {
+			return this.ThisYear(11, day, at_time?)
 		} else {
-			return this.NextYear(11, day, at_time)
+			return this.NextYear(11, day, at_time?)
 		}
 	}
 	
@@ -574,11 +582,11 @@ class Scheduler {
 	 * @param {String} [at_time] - specific time; defaults to current time
 	 * @returns {String} AHK time string
 	 */
-	static December(day := A_MDay, at_time := "") {
-		if (Time.GetMonth(this.USE_UTC ? A_NowUTC : A_Now) <= 12) {
-			return this.ThisYear(12, day, at_time)
+	static December(day := A_MDay, at_time?) {
+		if (Time.GetMonth(this.Now) <= 12) {
+			return this.ThisYear(12, day, at_time?)
 		} else {
-			return this.NextYear(12, day, at_time)
+			return this.NextYear(12, day, at_time?)
 		}
 	}
 	

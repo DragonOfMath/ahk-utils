@@ -4,10 +4,11 @@
 /**
  * @name        String.ahk
  * @description String utilities.
- * @version     1.2-2026.03.24
+ * @version     1.3-2026.03.28
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
+ * v1.3 - String.prototype.Contains now calls InStr; StrEmpty checks for empty string
  * v1.2 - String.prototype.Replace now calls StrReplace
  * v1.1 - cleanup and docs
  * v1.0 - initial release
@@ -209,9 +210,19 @@ StrJoin(sep, params*) {
 	return SubStr(str, 1, -StrLen(sep))
 }
 
+/**
+ * Whether a string is empty (i.e. zero length).
+ * @param {String} x
+ * @returns {Boolean}
+ */
+StrEmpty(x) {
+	return (x is String) and (StrLen(x) = 0)
+}
+
 
 StrBase := "".Base
 DefProp := {}.DefineProp
 DefProp(StrBase, "Length", {get: StrLen})
 DefProp(StrBase, "CharAt", {call: CharAt})
 DefProp(StrBase, "Replace", {call: StrReplace})
+DefProp(StrBase, "Contains", {call: InStr})

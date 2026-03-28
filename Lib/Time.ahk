@@ -107,6 +107,7 @@ DateCompare(time1 := "", time2 := "", unit := "Seconds") {
 
 /**
  * Time class for creating and manipulating AHK time strings more easily.
+ * Only uses local time, but switching between local and UTC is planned.
  * TODO: add UNIX epoch conversion
  * TODO: allow any locale month/day name conversion
  * @class {Time}

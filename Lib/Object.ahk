@@ -134,7 +134,11 @@ ObjMerge(target, objs*) {
 		} else if (obj is Object) {
 			for k,v in obj.OwnProps() {
 				if (target.HasOwnProp(k) and v is Object and target.%k% is Object) {
-					target.%k% := ObjMerge(target.%k%, v)
+					try {
+						target.%k% := ObjMerge(target.%k%, v)
+					} catch Any as err {
+						throw ValueError(err,, k)
+					}
 				} else {
 					target.%k% := v
 				}

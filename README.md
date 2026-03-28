@@ -1,7 +1,11 @@
 # ahk-utils
-collection of my autohotkey utilities
+collection of my autohotkey utilities, made for AHK 2.0 and later.
 
-all are made for AHK 2.0 and later
+# Installation
+store the files in an `AutoHotkey/Lib/` folder either locally in the CWD, the user documents folder, or the standard library folder for the AHK runtime.
+- https://www.autohotkey.com/docs/v2/Scripts.htm#lib
+then use the `#Include` directive to import the scripts.
+- https://www.autohotkey.com/docs/v2/lib/_Include.htm
 
 # Contents
 
@@ -21,3 +25,7 @@ all are made for AHK 2.0 and later
 | [String.ahk](./Lib/String.ahk) | Utilities for strings |
 | [Time.ahk](./Lib/Time.ahk) | Turns AHK's time strings into objects for easier modification |
 | [Window.ahk](./Lib/Window.ahk) | Interfaces an application window |
+
+# Remarks
+some of these utilities depend on others, like Rect requiring Point.
+not all utilities I have developed are listed here, but will be once they are ready and tested.
