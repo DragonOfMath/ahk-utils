@@ -10,7 +10,7 @@
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
- * v1.4 - Scheduler.Date and Scheduler.Time methods for partial AHK time string construction
+ * v1.4 - Scheduler.Date and Scheduler.Time methods for partial AHK time string construction; using global constants from Time.ahk for month/weekday methods; typoes fixed.
  * v1.3 - Scheduler.Now shortcut; methods no longer use empty string for default value, avoiding an edge case where midnight "000000" is considered falsy and wasn't properly handled
  * v1.2 - Various month/weekday methods
  * v1.1 - Scheduler.Random
@@ -23,7 +23,7 @@
  */
 class Scheduler {
 	/**
-	 * Toggles the scheduler to return UTC timestamps instead of local timestsamps
+	 * Use UTC timestamps instead of local timestamps.
 	 * @type {Boolean}
 	 */
 	static USE_UTC := true
@@ -49,6 +49,14 @@ class Scheduler {
 	 * @readonly
 	 */
 	static Now => this.USE_UTC ? A_NowUTC : A_Now
+	
+	/**
+	 * Shortcut for the timezone offset from UTC, depending on `USE_UTC`.
+	 * Already calculated in Time.ahk, but this returns 0 if using UTC time.
+	 * @type {Number}
+	 * @readonly
+	 */
+	static TZ_OFFSET => this.USE_UTC ? 0 : TIMEZONE_OFFSET
 	
 	/**
 	 * Creates a date-only string in AHK format, such as "20200202" for 2020-02-02.
@@ -77,7 +85,7 @@ class Scheduler {
 		now.hour := hour
 		now.minute := minute
 		now.second := second
-		return now
+		return now.time
 	}
 	
 	/**
@@ -122,10 +130,10 @@ class Scheduler {
 	
 	/**
 	 * Gets the time of the next interval according to the hours per interval and UTC offset.
-	 * For example, if an interval occurs every 6 hours starting at 12pm GMT, then at 5pm CST the next reset will be at 7pm.
+	 * For example, if an event occurs every 6 hours starting at 12pm GMT, then at 5pm CST the next scheduled occurrence will be at 7pm.
 	 * @param {Number} [interval=6] - interval period (in hours)
 	 * @param {Number} [offset=0] - offset from midnight GMT
-	 * @returns {String} ahk string of the next interval time
+	 * @returns {String} ahk string of the next occurrence
 	 */
 	static NextIntervalTime(interval := 6, offset := 0) {
 		now := Time()
@@ -147,7 +155,7 @@ class Scheduler {
 		times := Floor(hour_start / interval) + 1
 		
 		; calculate next interval hour
-		hour_next := offset + (this.USE_UTC ? 0 : TIMEZONE_OFFSET) + (interval * times)
+		hour_next := offset + this.TZ_OFFSET + (interval * times)
 		now.hour += hour_next - now.hour
 		now.minute := 0
 		now.second := 0
@@ -156,10 +164,10 @@ class Scheduler {
 	
 	/**
 	 * Gets the time of the previous interval according to the hours per interval and UTC offset.
-	 * For example, if an interval occurs every 6 hours starting at 12pm GMT, then at 5pm CST the previous reset was at 1pm.
+	 * For example, if an event occurs every 6 hours starting at 12pm GMT, then at 5pm CST the previous scheduled occurrence was at 1pm.
 	 * @param {Number} [interval=6] - interval period (in hours)
 	 * @param {Number} [offset=0] - offset from midnight GMT
-	 * @returns {String} ahk string of the next interval time
+	 * @returns {String} ahk string of the next occurrence
 	 */
 	static PrevIntervalTime(interval := 6, offset := 0) {
 		now := Time()
@@ -181,7 +189,7 @@ class Scheduler {
 		times := Floor(hour_start / interval)
 		
 		; calculate next interval hour
-		hour_next := offset + (this.USE_UTC ? 0 : TIMEZONE_OFFSET) + (interval * times)
+		hour_next := offset + this.TZ_OFFSET + (interval * times)
 		now.hour += hour_next - now.hour
 		now.minute := 0
 		now.second := 0
@@ -368,10 +376,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static Sunday(at_time?) {
-		if (Time.GetDay(this.Now) <= 1) {
-			return this.ThisWeek(1, at_time?)
+		dotw := DaysOfTheWeek.Sunday
+		if (Time.GetDay(this.Now) <= dotw) {
+			return this.ThisWeek(dotw, at_time?)
 		} else {
-			return this.NextWeek(1, at_time?)
+			return this.NextWeek(dotw, at_time?)
 		}
 	}
 	
@@ -381,10 +390,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static Monday(at_time?) {
-		if (Time.GetDay(this.Now) <= 2) {
-			return this.ThisWeek(2, at_time?)
+		dotw := DaysOfTheWeek.Monday
+		if (Time.GetDay(this.Now) <= dotw) {
+			return this.ThisWeek(dotw, at_time?)
 		} else {
-			return this.NextWeek(2, at_time?)
+			return this.NextWeek(dotw, at_time?)
 		}
 	}
 	
@@ -394,10 +404,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static Tuesday(at_time?) {
-		if (Time.GetDay(this.Now) <= 3) {
-			return this.ThisWeek(3, at_time?)
+		dotw := DaysOfTheWeek.Tuesday
+		if (Time.GetDay(this.Now) <= dotw) {
+			return this.ThisWeek(dotw, at_time?)
 		} else {
-			return this.NextWeek(3, at_time?)
+			return this.NextWeek(dotw, at_time?)
 		}
 	}
 	
@@ -407,10 +418,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static Wednesday(at_time?) {
-		if (Time.GetDay(this.Now) <= 4) {
-			return this.ThisWeek(4, at_time?)
+		dotw := DaysOfTheWeek.Wednesday
+		if (Time.GetDay(this.Now) <= dotw) {
+			return this.ThisWeek(dotw, at_time?)
 		} else {
-			return this.NextWeek(4, at_time?)
+			return this.NextWeek(dotw, at_time?)
 		}
 	}
 	
@@ -420,10 +432,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static Thursday(at_time?) {
-		if (Time.GetDay(this.Now) <= 5) {
-			return this.ThisWeek(5, at_time?)
+		dotw := DaysOfTheWeek.Thursday
+		if (Time.GetDay(this.Now) <= dotw) {
+			return this.ThisWeek(dotw, at_time?)
 		} else {
-			return this.NextWeek(5, at_time?)
+			return this.NextWeek(dotw, at_time?)
 		}
 	}
 	
@@ -433,10 +446,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static Friday(at_time?) {
-		if (Time.GetDay(this.Now) <= 6) {
-			return this.ThisWeek(6, at_time?)
+		dotw := DaysOfTheWeek.Friday
+		if (Time.GetDay(this.Now) <= dotw) {
+			return this.ThisWeek(dotw, at_time?)
 		} else {
-			return this.NextWeek(6, at_time?)
+			return this.NextWeek(dotw, at_time?)
 		}
 	}
 	
@@ -446,10 +460,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static Saturday(at_time?) {
-		if (Time.GetDay(this.Now) <= 7) {
-			return this.ThisWeek(7, at_time?)
+		dotw := DaysOfTheWeek.Saturday
+		if (Time.GetDay(this.Now) <= dotw) {
+			return this.ThisWeek(dotw, at_time?)
 		} else {
-			return this.NextWeek(7, at_time?)
+			return this.NextWeek(dotw, at_time?)
 		}
 	}
 	
@@ -460,10 +475,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static January(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 1) {
-			return this.ThisYear(1, day, at_time?)
+		moty := MonthsOfTheYear.January
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(1, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -474,10 +490,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static February(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 2) {
-			return this.ThisYear(2, day, at_time?)
+		moty := MonthsOfTheYear.February
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(2, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -488,10 +505,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static March(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 3) {
-			return this.ThisYear(3, day, at_time?)
+		moty := MonthsOfTheYear.March
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(3, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -502,10 +520,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static April(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 4) {
-			return this.ThisYear(4, day, at_time?)
+		moty := MonthsOfTheYear.April
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(4, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -516,10 +535,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static May(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 5) {
-			return this.ThisYear(5, day, at_time?)
+		moty := MonthsOfTheYear.May
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(5, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -530,10 +550,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static June(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 6) {
-			return this.ThisYear(6, day, at_time?)
+		moty := MonthsOfTheYear.June
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(6, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -544,10 +565,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static July(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 7) {
-			return this.ThisYear(7, day, at_time?)
+		moty := MonthsOfTheYear.July
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(7, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -558,10 +580,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static August(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 8) {
-			return this.ThisYear(8, day, at_time?)
+		moty := MonthsOfTheYear.August
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(8, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -572,10 +595,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static September(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 9) {
-			return this.ThisYear(9, day, at_time?)
+		moty := MonthsOfTheYear.September
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(9, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -586,10 +610,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static October(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 10) {
-			return this.ThisYear(10, day, at_time?)
+		moty := MonthsOfTheYear.October
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(10, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -600,10 +625,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static November(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 11) {
-			return this.ThisYear(11, day, at_time?)
+		moty := MonthsOfTheYear.November
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(11, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
@@ -614,10 +640,11 @@ class Scheduler {
 	 * @returns {String} AHK time string
 	 */
 	static December(day := A_MDay, at_time?) {
-		if (Time.GetMonth(this.Now) <= 12) {
-			return this.ThisYear(12, day, at_time?)
+		moty := MonthsOfTheYear.December
+		if (Time.GetMonth(this.Now) <= moty) {
+			return this.ThisYear(moty, day, at_time?)
 		} else {
-			return this.NextYear(12, day, at_time?)
+			return this.NextYear(moty, day, at_time?)
 		}
 	}
 	
