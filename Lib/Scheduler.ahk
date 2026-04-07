@@ -6,10 +6,11 @@
 /**
  * @name        Scheduler.ahk
  * @description Utility library that complements Time.ahk by calculating schedules, intervals, countdowns, and more.
- * @version     1.3-2026.03.28
+ * @version     1.4-2026.04.06
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
+ * v1.4 - Scheduler.Date and Scheduler.Time methods for partial AHK time string construction
  * v1.3 - Scheduler.Now shortcut; methods no longer use empty string for default value, avoiding an edge case where midnight "000000" is considered falsy and wasn't properly handled
  * v1.2 - Various month/weekday methods
  * v1.1 - Scheduler.Random
@@ -48,6 +49,36 @@ class Scheduler {
 	 * @readonly
 	 */
 	static Now => this.USE_UTC ? A_NowUTC : A_Now
+	
+	/**
+	 * Creates a date-only string in AHK format, such as "20200202" for 2020-02-02.
+	 * @param {Number} [year=A_Year] - the year
+	 * @param {Number} [month=A_Mon] - the month index of the year
+	 * @param {Number} [day=A_MDay] - the day of the month
+	 * @returns {String}
+	 */
+	static Date(year := A_Year, month := A_Mon, day := A_MDay) {
+		now := Time()
+		now.year := year
+		now.month := month
+		now.day := day
+		return now.date
+	}
+	
+	/**
+	 * Creates a time-only string in AHK format, such as "123000" for 12:30.
+	 * @param {Number} [hour=A_Hour] - the hour
+	 * @param {Number} [minute=A_Min] - the minute
+	 * @param {Number} [second=A_Sec] - the second
+	 * @returns {String}
+	 */
+	static Time(hour := A_Hour, minute := A_Min, second := A_Sec) {
+		now := Time()
+		now.hour := hour
+		now.minute := minute
+		now.second := second
+		return now
+	}
 	
 	/**
 	 * Returns the future timestamp from now of time elapsed.
@@ -116,7 +147,7 @@ class Scheduler {
 		times := Floor(hour_start / interval) + 1
 		
 		; calculate next interval hour
-		hour_next := offset + (this.USE_UTC ? 0 : TIMEZONE_OFFSET) + (interval.hours * times)
+		hour_next := offset + (this.USE_UTC ? 0 : TIMEZONE_OFFSET) + (interval * times)
 		now.hour += hour_next - now.hour
 		now.minute := 0
 		now.second := 0
