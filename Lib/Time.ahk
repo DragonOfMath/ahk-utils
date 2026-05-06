@@ -4,11 +4,11 @@
 /**
  * @name        Time.ahk
  * @description Utility for granular time and date manipulation.
- * @version     1.21-2026.03.19
+ * @version     1.3-2026.05.03
  * @requires    Autohotkey >= 2.0
  * @license     GNU GPLv3
  * Changelog:
- * v1.3 - 
+ * v1.3 - Compare, IsBefore, and IsAfter
  * v1.2 - made DayName and MonthName settable
  * v1.1 - allow DateMin, DateMax, and DateCompare to work with unset parameters
  * v1.0 - initial release
@@ -250,7 +250,7 @@ class Time {
 	 * Compares this instance with another instance to determine which comes sooner.
 	 * @returns {Number} -1 if this comes before the other, 1 if it comes after, 0 if they are the same
 	 */
-	Compare(t) {
+	Compare(t := A_NowUTC) {
 		if (not (t is Time)) {
 			t := Time(t)
 		}
@@ -267,6 +267,24 @@ class Time {
 			   __Compare(this.Minute, t.Minute) or 
 			   __Compare(this.Second, t.Second)
 		*/
+	}
+	
+	/**
+	 * Returns true if this time instance comes before another time.
+	 * @param {String|Time} [t?] - default is current time
+	 * @returns {Boolean}
+	 */
+	IsBefore(t?) {
+		return this.Compare(t?) = -1
+	}
+	
+	/**
+	 * Returns true if this time instance comes after another time.
+	 * @param {String|Time} [t?] - default is current time
+	 * @returns {Boolean}
+	 */
+	IsAfter(t?) {
+		return this.Compare(t?) = 1
 	}
 	
 	/**

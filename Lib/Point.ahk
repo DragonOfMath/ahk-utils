@@ -4,10 +4,12 @@
 /**
  * @name        Point
  * @description Standard point data structure with some methods relevant to AHK.
- * @version     1.1-2026.01.06
+ * @version     1.3-2026.04.15
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
+ *  - v1.3 - MultiplyAdd, SubDivide, and static operations
+ *  - v1.2 - static methods for math operations
  *  - v1.1 - using SendMode("Event") for dragging with delay
  *  - v1.0 - initial release
  */
@@ -99,7 +101,7 @@ class Point {
 	 * @returns {Point} new instance
 	 */
 	Add(p) {
-		return Point(this.x + p.x, this.y + p.y)
+		return Point.Add(this, p)
 	}
 	
 	/**
@@ -108,7 +110,7 @@ class Point {
 	 * @returns {Point} new instance
 	 */
 	Subtract(p) {
-		return Point(this.x - p.x, this.y - p.y)
+		return Point.Subtract(this, p)
 	}
 	
 	/**
@@ -117,7 +119,7 @@ class Point {
 	 * @returns {Point} new instance
 	 */
 	Multiply(p) {
-		return Point(this.x * p.x, this.y * p.y)
+		return Point.Multiply(this, p)
 	}
 	
 	/**
@@ -126,7 +128,7 @@ class Point {
 	 * @returns {Point} new instance
 	 */
 	Divide(p) {
-		return Point(this.x / p.x, this.y / p.y)
+		return Point.Divide(this, p)
 	}
 	
 	/**
@@ -135,7 +137,7 @@ class Point {
 	 * @returns {Point} new instance
 	 */
 	IDivide(p) {
-		return Point(this.x // p.x, this.y // p.y)
+		return Point.IDivide(this, p)
 	}
 	
 	/**
@@ -145,6 +147,26 @@ class Point {
 	 */
 	MultiplyScalar(s) {
 		return Point(this.x * s, this.y * s)
+	}
+	
+	/**
+	 * Component-wise multiply-add of points.
+	 * @param {Point} m - multiplier
+	 * @param {Point} a - adder
+	 * @returns {Point} new instance
+	 */
+	MultiplyAdd(m, a) {
+		return Point((this.x * m.x) + a.x, (this.y * m.y) + a.y)
+	}
+	
+	/**
+	 * Component-wise subtract-divide of points.
+	 * @param {Point} s - subtractor
+	 * @param {Point} d - divider
+	 * @returns {Point} new instance
+	 */
+	SubDivide(s, d) {
+		return Point((this.x - s.x) / d.x, (this.y - s.y) / d.y)
 	}
 	
 	/**
@@ -186,8 +208,8 @@ class Point {
 	}
 	
 	/**
-	 * Dot product of this point and another.
-	 * @param {Point} p
+	 * Dot product of two points.
+	 * @param {Point} p - second point
 	 * @returns {Number}
 	 */
 	Dot(p) {
@@ -195,8 +217,8 @@ class Point {
 	}
 	
 	/**
-	 * Distance from this point to another.
-	 * @param {Point} p
+	 * Distance between two points.
+	 * @param {Point} p - second point
 	 * @returns {Number}
 	 */
 	Distance(p) {
@@ -317,6 +339,31 @@ class Point {
 	 */
 	static Random(min := 0.0, max := 1.0) {
 		return Point(Random(min, max), Random(min, max))
+	}
+	
+	static Add(a, b) {
+		return Point(a.x + b.x, a.y + b.y)
+	}
+	static Subtract(a, b) {
+		return Point(a.x - b.x, a.y - b.y)
+	}
+	static Multiply(a, b) {
+		return Point(a.x * b.x, a.y * b.y)
+	}
+	static Divide(a, b) {
+		return Point(a.x / b.x, a.y / b.y)
+	}
+	static IDivide(a, b) {
+		return Point(a.x // b.x, a.y // b.y)
+	}
+	static Dot(a, b) {
+		return a.x * b.x + a.y * b.y
+	}
+	static Distance(a, b) {
+		return this.Subtract(a, b).length
+	}
+	static Equals(a, b) {
+		return (a.x = b.x) and (a.y = b.y)
 	}
 }
 

@@ -6,10 +6,11 @@
 /**
  * @name        Scheduler.ahk
  * @description Utility library that complements Time.ahk by calculating schedules, intervals, countdowns, and more.
- * @version     1.4-2026.04.06
+ * @version     1.5-2026.05.06
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
+ * v1.5 - Scheduler.NextTime and Scheduler.PrevTime for getting the next/previous instance of a time with respect to the current time; bugfix: Time.GetDay -> Time.GetDayOfWeek for weekday-related scheduling
  * v1.4 - Scheduler.Date and Scheduler.Time methods for partial AHK time string construction; using global constants from Time.ahk for month/weekday methods; typoes fixed.
  * v1.3 - Scheduler.Now shortcut; methods no longer use empty string for default value, avoiding an edge case where midnight "000000" is considered falsy and wasn't properly handled
  * v1.2 - Various month/weekday methods
@@ -197,6 +198,34 @@ class Scheduler {
 	}
 	
 	/**
+	 * Gets the next instance of the time.
+	 * @param {String} [at_time] - specific time; defaults to current time, which gives the same time tomorrow
+	 * @returns {String}
+	 */
+	static NextTime(at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
+		if (not t.IsAfter(this.Now))
+			t.day++
+		return t.ahk_time
+	}
+	
+	/**
+	 * Gets the previous instance of the time.
+	 * @param {String} [at_time] - specific time; defaults to current time. which gives the same time yesterday
+	 * @returns {String}
+	 */
+	static PrevTime(at_time?) {
+		t := Time(this.Now)
+		if (IsSet(at_time))
+			t.time := at_time
+		if (not t.IsBefore(this.Now))
+			t.day--
+		return t.ahk_time
+	}
+	
+	/**
 	 * Sets a time for today.
 	 * @param {String} [at_time] - specific time; defaults to current time, which is pointless
 	 * @returns {String}
@@ -377,7 +406,7 @@ class Scheduler {
 	 */
 	static Sunday(at_time?) {
 		dotw := DaysOfTheWeek.Sunday
-		if (Time.GetDay(this.Now) <= dotw) {
+		if (Time.GetDayOfWeek(this.Now) <= dotw) {
 			return this.ThisWeek(dotw, at_time?)
 		} else {
 			return this.NextWeek(dotw, at_time?)
@@ -391,7 +420,7 @@ class Scheduler {
 	 */
 	static Monday(at_time?) {
 		dotw := DaysOfTheWeek.Monday
-		if (Time.GetDay(this.Now) <= dotw) {
+		if (Time.GetDayOfWeek(this.Now) <= dotw) {
 			return this.ThisWeek(dotw, at_time?)
 		} else {
 			return this.NextWeek(dotw, at_time?)
@@ -405,7 +434,7 @@ class Scheduler {
 	 */
 	static Tuesday(at_time?) {
 		dotw := DaysOfTheWeek.Tuesday
-		if (Time.GetDay(this.Now) <= dotw) {
+		if (Time.GetDayOfWeek(this.Now) <= dotw) {
 			return this.ThisWeek(dotw, at_time?)
 		} else {
 			return this.NextWeek(dotw, at_time?)
@@ -419,7 +448,7 @@ class Scheduler {
 	 */
 	static Wednesday(at_time?) {
 		dotw := DaysOfTheWeek.Wednesday
-		if (Time.GetDay(this.Now) <= dotw) {
+		if (Time.GetDayOfWeek(this.Now) <= dotw) {
 			return this.ThisWeek(dotw, at_time?)
 		} else {
 			return this.NextWeek(dotw, at_time?)
@@ -433,7 +462,7 @@ class Scheduler {
 	 */
 	static Thursday(at_time?) {
 		dotw := DaysOfTheWeek.Thursday
-		if (Time.GetDay(this.Now) <= dotw) {
+		if (Time.GetDayOfWeek(this.Now) <= dotw) {
 			return this.ThisWeek(dotw, at_time?)
 		} else {
 			return this.NextWeek(dotw, at_time?)
@@ -447,7 +476,7 @@ class Scheduler {
 	 */
 	static Friday(at_time?) {
 		dotw := DaysOfTheWeek.Friday
-		if (Time.GetDay(this.Now) <= dotw) {
+		if (Time.GetDayOfWeek(this.Now) <= dotw) {
 			return this.ThisWeek(dotw, at_time?)
 		} else {
 			return this.NextWeek(dotw, at_time?)
@@ -461,7 +490,7 @@ class Scheduler {
 	 */
 	static Saturday(at_time?) {
 		dotw := DaysOfTheWeek.Saturday
-		if (Time.GetDay(this.Now) <= dotw) {
+		if (Time.GetDayOfWeek(this.Now) <= dotw) {
 			return this.ThisWeek(dotw, at_time?)
 		} else {
 			return this.NextWeek(dotw, at_time?)
