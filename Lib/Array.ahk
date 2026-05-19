@@ -4,15 +4,17 @@
 /**
  * @name        Array.ahk
  * @description Library that extends the Array class to bring features similar to JavaScript and other languages.
- * @version     1.4-2026.01.12
+ * @version     1.6-2026.05.18
  * @requires    Autohotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
- * v1.4 - upgrade Reduce to behave more like JavaScript, which allows for an unset initial value; added IsArray, ArrayAssert, ArrayFill, ArrayLastIndexOf, and ArrayReduceRight, ArraySearchLast; added Set-like methods
- * v1.3 - added Reduce and GroupBy methods, and automatic ToString calls when Joining
- * v1.2 - added Flat, Some, and Every methods
- * v1.1 - added Sort and Random methods
- * v1.0 - initial release
+ * - v1.6 - added `IsEmptyArray`, `Pluck`, `Combine`, `Zip`, `Unzip`, `Count`
+ * - v1.5 - changed `Reduce` and `ReduceRight` to return 0 for empty arrays and no initial value set
+ * - v1.4 - upgrade `Reduce` to behave more like JavaScript, which allows for an unset initial value; added `IsArray`, `ArrayAssert`, `Fill`, `LastIndexOf`, `ReduceRight`, `SearchLast`, and Set-like methods
+ * - v1.3 - added `Reduce`, `GroupBy`; automatic `ToString` calls when `Join`ing
+ * - v1.2 - added `Flat`, `Some`, `Every`
+ * - v1.1 - added `Sort`, `Random`
+ * - v1.0 - initial release
  */
 
 __IdentityFunc := (x,*) => x
@@ -25,6 +27,16 @@ __DefaultComparator := (a,b,*) => a < b ? -1 : a > b ? 1 : 0
  */
 IsArray(arr,*) {
 	return arr is Array
+}
+
+/**
+ * Whether an array has no length.
+ * Non-arrays are also false.
+ * @param {Any} arr
+ * @returns {Boolean}
+ */
+IsEmptyArray(arr) {
+	return IsArray(arr) and arr.Length = 0
 }
 
 /**
@@ -390,6 +402,86 @@ ArrayMap(this, map) {
 }
 
 /**
+ * Retrieves a property from each element in the array.
+ * @param {Array} this
+ * @param {Number|String} prop
+ * @returns {Array}
+ */
+ArrayPluck(this, prop) {
+	if (prop is Number) {
+		return ArrayMap(this, (elem,*) => elem[prop])
+	} else {
+		return ArrayMap(this, (elem,*) => elem.%prop%)
+	}
+}
+
+/**
+ * Combines several arrays element-wise using a mapping function.
+ * @param {Array} this
+ * @param {Array[]} [arrays*]
+ * @param {Func} [fn]
+ */
+ArrayCombine(this, args*) {
+	if (not args.Length) {
+		return ArraySlice(this)
+	}
+	arrays := ArraySlice(args, 1, args.Length-1)
+	opFunc := args[args.Length]
+	AssertArrays(this, arrays*)
+	Assert(opFunc is Func, "final argument must be a Func")
+	return ArrayMap(this, (elem,idx,*) => opFunc(this, arrays*))
+}
+
+
+/**
+ * Merges several arrays element-wise such that each element is 
+ * an array of the elements plucked at the same index from all the arrays.
+ * @param {Array} this
+ * @param {Array[]} [arrays*]
+ * @returns {Array}
+ */
+ArrayZip(this, arrays*) {
+	AssertArrays(this, arrays*)
+	return ArrayUnzip([this, arrays*])
+}
+
+/**
+ * Does the reverse of `ArrayZip`.
+ * @param {Array} this
+ * @returns {Array[]}
+ */
+ArrayUnzip(this) {
+	AssertArrays(this, this*)
+	unzipped := []
+	loop Max(ArrayPluck(this, "Length")*) {
+		unzipped.Push(ArrayPluck(this, A_Index))
+	}
+	return unzipped
+}
+
+/**
+ * Counts the number of elements in the array that satisfy a condition function.
+ * More efficient than using `Filter().Length`.
+ * @param {Array} this
+ * @param {Func} [condition] - accepts the value and index as arguments
+ * @returns {Integer}
+ */
+ArrayCount(this, condition := 0) {
+	if (condition = 0) {
+		condition := __IdentityFunc
+	}
+	AssertTypes([this, condition], [Array, Func])
+	count := 0
+	loop this.Length {
+		val := this[A_Index]
+		if (condition(val,A_Index)) {
+			count++
+		}
+	}
+	return count
+}
+
+/**
  * Filters the array by keeping items that satisfy the filter function.
  * @param {Array} this
  * @param {Func} [filter] - accepts the value and index as arguments
@@ -445,8 +537,21 @@ ArrayReduce(this, reducer := 0, initialValue?) {
 	}
 	AssertTypes([this, reducer], [Array, Func])
 	initialValueNotSet := not IsSet(initialValue)
-	reduced := initialValueNotSet ? this[1] : initialValue
-	loop this.Length {
+	len := this.Length
+	if (len = 0) {
+		if (initialValueNotSet) {
+			return 0
+		} else {
+			return initialValue
+		}
+	}
+	reduced := ""
+	if (initialValueNotSet) {
+		reduced := this[1]
+	} else {
+		reduced := initialValue
+	}
+	loop len {
 		if (A_Index = 1 and initialValueNotSet) {
 			continue
 		} else {
@@ -469,9 +574,20 @@ ArrayReduceRight(this, reducer := 0, initialValue?) {
 		reducer := __IdentityFunc
 	}
 	AssertTypes([this, reducer], [Array, Func])
-	len := this.Length
 	initialValueNotSet := not IsSet(initialValue)
-	reduced := initialValueNotSet ? this[len] : initialValue
+	len := this.Length
+	if (len = 0) {
+		if (initialValueNotSet) {
+			return 0
+		} else {
+			return initialValue
+		}
+	}
+	if (initialValueNotSet) {
+		reduced := this[len]
+	} else {
+		reduced := initialValue
+	}
 	loop len {
 		if (A_Index = 1 and initialValueNotSet) {
 			continue
@@ -680,6 +796,7 @@ ArraySymmetricDifference(this, arr) {
 }
 
 Array.IsArray := IsArray
+Array.IsEmpty := IsEmptyArray
 Array.Comprehend := ArrayComprehend
 Array.Range := ArrayRange
 ArrayBase := [].Base
@@ -701,6 +818,11 @@ ArrayBase.Flat := ArrayFlat
 ArrayBase.Search := ArraySearch
 ArrayBase.SearchLast := ArraySearchLast
 ArrayBase.Map := ArrayMap
+ArrayBase.Pluck := ArrayPluck
+ArrayBase.Combine := ArrayCombine
+ArrayBase.Zip := ArrayZip
+ArrayBase.Unzip := ArrayUnzip
+ArrayBase.Count := ArrayCount
 ArrayBase.Filter := ArrayFilter
 ArrayBase.Exclude := ArrayExclude
 ArrayBase.Reduce := ArrayReduce

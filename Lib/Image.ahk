@@ -6,10 +6,11 @@
 /**
  * @name        Image.ahk
  * @description Image utility library for loading, referencing, and template matching with the screen.
- * @version     1.3-2026.03.19
+ * @version     1.3b-2026.05.18
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
+ * - v1.3b: Image.DIR no longer uses "assets" subfolder by default; `SearchAll` slightly greedier in subsequent search areas
  * - v1.3: SearchAll for multiple matches using a divide-and-conquer method
  * - v1.2: added lastFound property
  * - v1.1: added the ability to search for an exact match, ignoring the TransColor
@@ -36,7 +37,7 @@ class Image {
 	 * The directory of images to use.
 	 * @type {String}
 	 */
-	static DIR := A_WorkingDir . "\assets\"
+	static DIR := A_WorkingDir . "\"
 
 	name := ""
 	handle := 0
@@ -115,6 +116,9 @@ class Image {
 	 */
 	Load() {
 		if (not this.handle) {
+			if (not FileExist(this.path)) {
+				throw ValueError("No image file found",, this.path)
+			}
 			this.handle := LoadPicture(this.path)
 			if (this.handle) {
 				if (this.width = 0) {
@@ -187,26 +191,28 @@ class Image {
 	SearchAll(rect := ScreenRect, tolerance := 0) {
 		positions := []
 		
-		searchRect := rect.Clone()
-		found := this.Search(searchRect, tolerance)
-		
-		while (found) {
-			positions.Push(found)
-			
-			searchRect.x := found.x + this.width
-			searchRect.y := found.y - 1
-			searchRect.width := rect.width - searchRect.x
-			searchRect.height := this.height + 2
-			
+		if (this.enabled) {
+			searchRect := rect.Clone()
 			found := this.Search(searchRect, tolerance)
 			
-			if (not found) {
-				searchRect.x := 0
-				searchRect.y += searchRect.height
-				searchRect.width := rect.width
-				searchRect.height := rect.height - searchRect.y
+			while (found) {
+				positions.Push(found)
+				
+				searchRect.x := found.x + this.width
+				searchRect.y := found.y - 2
+				searchRect.width := rect.width - searchRect.x
+				searchRect.height := this.height + 4
 				
 				found := this.Search(searchRect, tolerance)
+				
+				if (not found) {
+					searchRect.x := 0
+					searchRect.y += searchRect.height
+					searchRect.width := rect.width
+					searchRect.height := rect.height - searchRect.y
+					
+					found := this.Search(searchRect, tolerance)
+				}
 			}
 		}
 		

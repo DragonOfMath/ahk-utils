@@ -4,14 +4,15 @@
 /**
  * @name        Point
  * @description Standard point data structure with some methods relevant to AHK.
- * @version     1.3-2026.04.15
+ * @version     1.4-2026.05.18
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
- *  - v1.3 - MultiplyAdd, SubDivide, and static operations
- *  - v1.2 - static methods for math operations
- *  - v1.1 - using SendMode("Event") for dragging with delay
- *  - v1.0 - initial release
+ * - v1.4 - `DistanceTaxicab`, `DistanceChebyshev`, `DistanceHamming`, and `ToArray`
+ * - v1.3 - `MultiplyAdd`, `SubDivide`, and static operations
+ * - v1.2 - static methods for math operations
+ * - v1.1 - using `SendMode("Event")` for dragging with delay
+ * - v1.0 - initial release
  */
 
 /**
@@ -217,12 +218,42 @@ class Point {
 	}
 	
 	/**
-	 * Distance between two points.
+	 * Euclidean distance between two points.
 	 * @param {Point} p - second point
 	 * @returns {Number}
 	 */
 	Distance(p) {
 		return this.Subtract(p).length
+	}
+	
+	/**
+	 * Taxicab/Manhattan distance between two points (sum of the absolute differences).
+	 * @param {Point} p - second point
+	 * @returns {Number}
+	 */
+	DistanceTaxicab(p) {
+		p := this.Subtract(p).Abs()
+		return p.x + p.y
+	}
+	
+	/**
+	 * Chebyshev/Chess distance between two points (maximum of the absolute differences).
+	 * @param {Point} p - second point
+	 * @returns {Number}
+	 */
+	DistanceChebyshev(p) {
+		p := this.Subtract(p).Abs()
+		return Max(p.x, p.y)
+	}
+	
+	/**
+	 * Hamming distance between two points (how many bits in their difference is 1).
+	 * @param {Point} p - second point
+	 * @returns {Number}
+	 */
+	DistanceHamming(p) {
+		p := this.Subtract(p).Abs()
+		return StrCount(Format("{1:b}{2:b}", p.x, p.y), "1")
 	}
 	
 	/**
@@ -276,6 +307,14 @@ class Point {
 	 */
 	ToString() {
 		return "Point:" . this.x . "," . this.y
+	}
+	
+	/**
+	 * Serializes the point to an array.
+	 * @returns {String}
+	 */
+	ToArray() {
+		return [this.x, this.y]
 	}
 	
 	/**

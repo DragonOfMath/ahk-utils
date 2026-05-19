@@ -4,14 +4,15 @@
 /**
  * @name        String.ahk
  * @description String utilities.
- * @version     1.3-2026.03.28
+ * @version     1.4-2026.05.18
  * @requires    AutoHotkey >=2.0
  * @license     GNU GPLv3
  * Changelog:
- * v1.3 - String.prototype.Contains now calls InStr; StrEmpty checks for empty string
- * v1.2 - String.prototype.Replace now calls StrReplace
- * v1.1 - cleanup and docs
- * v1.0 - initial release
+ * - v1.4 - `StrCount`
+ * - v1.3 - `String.prototype.Contains` now calls `InStr`; `StrEmpty` checks for empty string
+ * - v1.2 - `String.prototype.Replace` now calls `StrReplace`
+ * - v1.1 - cleanup and docs
+ * - v1.0 - initial release
  */
 
 /**
@@ -219,6 +220,27 @@ StrEmpty(x) {
 	return (x is String) and (StrLen(x) = 0)
 }
 
+/**
+ * Counts the number of instances that a substring appears in a string, using `RegExMatch` (it can be quite slow for greedy searches).
+ * @param {String} haystack - the string to search in
+ * @param {String} needle - the string or regular expression to search for
+ * @returns {Number} how many times `needle` appeared in `haystack`.
+ */
+StrCount(haystack, needle) {
+	count := 0
+	startPos := 1
+	while (startPos <= StrLen(haystack)) {
+		foundPos := RegExMatch(haystack, needle, &matched, startPos)
+		if (foundPos) {
+			startPos := foundPos + matched.Len
+			count++
+		} else {
+			break
+		}
+	}
+	return count
+}
+
 
 StrBase := "".Base
 DefProp := {}.DefineProp
@@ -226,3 +248,4 @@ DefProp(StrBase, "Length", {get: StrLen})
 DefProp(StrBase, "CharAt", {call: CharAt})
 DefProp(StrBase, "Replace", {call: StrReplace})
 DefProp(StrBase, "Contains", {call: InStr})
+;DefProp(StrBase, "Count", {call: StrCount})
